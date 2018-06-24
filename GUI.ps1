@@ -8,7 +8,7 @@ Add-Type -AssemblyName System.Windows.Forms
 
 $Form                            = New-Object system.Windows.Forms.Form
 $Form.ClientSize                 = '731,445'
-$Form.text                       = "Przygotował Michał Zbyl. Ver. 2.1.2"
+$Form.text                       = "Przygotował Michał Zbyl. Ver. 2.2.5"
 $form.StartPosition              = "centerscreen"
 $Form.TopMost                    = $false
 
@@ -53,6 +53,13 @@ $Button23.width                   = 80
 $Button23.height                  = 30
 $Button23.location                = New-Object System.Drawing.Point(106,210)
 $Button23.Font                    = 'Microsoft Sans Serif,8'
+
+$Button27                         = New-Object system.Windows.Forms.Button
+$Button27.text                    = "SID po p0"
+$Button27.width                   = 80
+$Button27.height                  = 25
+$Button27.location                = New-Object System.Drawing.Point(106,240)
+$Button27.Font                    = 'Microsoft Sans Serif,8'
 
 $Button15                         = New-Object system.Windows.Forms.Button
 $Button15.text                    = "Status Pacjenta po nazwisku"
@@ -245,14 +252,20 @@ $Button19.height                  = 30
 $Button19.location                = New-Object System.Drawing.Point(346,180)
 $Button19.Font                    = 'Microsoft Sans Serif,8'
 
-$Form.controls.AddRange(@($Button1,$Label3,$TextBox1,$Button25,$Button24,$Button26,$TextBox4,$Button16,$Button23,$Button22,$Button21,$Button19,$Button20,$Button18,$TextBox2,$Label1,$Button2,$Button15,$Button3,$Button13,$Button14,$Label2,$TextBox3,$Button4,$Button5,$Button6,$Button7,$Button12,$Button8,$Button9,$Button10,$Button11))
+$ListBox                          = New-Object system.Windows.Forms.ListBox
+$ListBox.text                     = "listBox"
+$ListBox.width                    = 210
+$ListBox.height                   = 180
+$ListBox.location                 = New-Object System.Drawing.Point(480,80)
+
+$Form.controls.AddRange(@($Button1,$ListBox,$Label3,$TextBox1,$Button25,$Button27,$Button24,$Button26,$TextBox4,$Button16,$Button23,$Button22,$Button21,$Button19,$Button20,$Button18,$TextBox2,$Label1,$Button2,$Button15,$Button3,$Button13,$Button14,$Label2,$TextBox3,$Button4,$Button5,$Button6,$Button7,$Button12,$Button8,$Button9,$Button10,$Button11))
 
 $userr = $env:UserName
-$p1 = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("cDAxMTYx"))
-$p2 = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("cDAxMTk4"))
-$p3 = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("cDAxMTk3"))
-$p4 = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("cDAwMzk2"))
-$p5 = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("cDAwNDgx"))
+$p1 = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(""))
+$p2 = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(""))
+$p3 = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(""))
+$p4 = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(""))
+$p5 = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(""))
 
 if (($userr -eq $p1) -or ($userr -eq $p2) -or ($userr -eq $p3) -or ($userr -eq $p4) -or ($userr -eq $p5)) {
     $zuo1 = "zuo"
@@ -271,10 +284,39 @@ If (($members -contains $userr) -or ($zuo1 -eq "zuo")) {
     $ora_pass = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(""))
     $ora_sid = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(""))
 
+
+#ListBox
+$ListBox.Items.AddRange()
+$ListBox.Add_DoubleClick({
+    $a = $ListBox.SelectedItem
+    if ($a -like "*-*") {
+        $c = $a.split('-')[1]
+        $b = $c.split(' ')[1]
+        $TextBox3.Text = $b
+    } else {
+        $TextBox3.Text = $a
+    }
+})
+
+# SID po P
+$Button27.Add_Click({
+    $TextBox2.AppendText("Czekamy Cierpliwie...`r`n")
+
+    $SID = $TextBox3.Text
+
+    $objUser = New-Object System.Security.Principal.NTAccount("SZPITAL.LOCAL", $SID)
+    $SIDF = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
+
+    $TextBox2.AppendText("`r`n")
+    $check_userAD = Get-ADUser -Identity $SID | Select-Object -ExpandProperty Name
+    $TextBox2.AppendText("$check_userAD - $SID`r`n")
+    $TextBox2.AppendText("$SIDF`r`n")
+})
+
 # AD - PC Raport
 $Button18.Add_Click({
-    $TextBox2.AppendText("Zawsze Aktualne`n")
-    $TextBox2.AppendText("Czekamy Cierpliwie aż się pokaże...`n")
+    $TextBox2.AppendText("Zawsze Aktualne`r`n")
+    $TextBox2.AppendText("Czekamy Cierpliwie aż się pokaże...`r`n")
 
     $audit1 = Get-ADComputer -Filter "ObjectClass -eq 'Computer'" `
         -Properties Name, OperatingSystem, `
@@ -290,17 +332,17 @@ $Button18.Add_Click({
             DistinguishedName | Sort-Object Name
 
     $audit1 | Out-GridView -Title "Przygotował Michał Zbyl"
-    $TextBox2.AppendText("`n")
+    $TextBox2.AppendText("`r`n")
 })
 # Ponowne Skierowanie
 $Button24.Add_Click({
     $nazwau = $TextBox1.Text
 
     if ($nazwau) {
-        $TextBox2.AppendText("Ponowne przesłanie z Esku do opisu`n")
-        $TextBox2.AppendText("`n")
-        $TextBox2.AppendText("Możesz zawęzić dodając do nazwiska imię. Np. Barański Michał`n")
-        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`n")
+        $TextBox2.AppendText("Ponowne przesłanie z Esku do opisu`r`n")
+        $TextBox2.AppendText("`r`n")
+        $TextBox2.AppendText("Możesz zawęzić dodając do nazwiska imię. Np. Barański Michał`r`n")
+        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`r`n")
         ## by SID
         $connection = New-Object Oracle.ManagedDataAccess.Client.OracleConnection("Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=$ora_server)(PORT=1521)) (CONNECT_DATA=(SID=$ora_sid)));User Id=$ora_user;Password=$ora_pass;")
         
@@ -339,13 +381,13 @@ $Button24.Add_Click({
     
             $connection.close()
 
-            $TextBox2.AppendText("Przesłano ponownie skierowanie $sprwynn`n")
+            $TextBox2.AppendText("Przesłano ponownie skierowanie $sprwynn`r`n")
         }
     } else {
-        $TextBox2.AppendText("Ponowne przesłanie z Esku do opisu`n")
-        $TextBox2.AppendText("`n")
-        $TextBox2.AppendText("Pole puste`n")
-        $TextBox2.AppendText("Możesz zawęzić dodając do nazwiska imię. Np. Barański Michał`n")
+        $TextBox2.AppendText("Ponowne przesłanie z Esku do opisu`r`n")
+        $TextBox2.AppendText("`r`n")
+        $TextBox2.AppendText("Pole puste`r`n")
+        $TextBox2.AppendText("Możesz zawęzić dodając do nazwiska imię. Np. Barański Michał`r`n")
     }
 })
 # Pacjent - Info
@@ -353,10 +395,10 @@ $Button25.Add_Click({
     $nazwai = $TextBox1.Text
 
     if ($nazwai) {
-        $TextBox2.AppendText("Informacje o Pacjencie z bazy`n")
-        $TextBox2.AppendText("`n")
-        $TextBox2.AppendText("Możesz zawęzić dodając do nazwiska imię. Np. Barański Michał`n")
-        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`n")
+        $TextBox2.AppendText("Informacje o Pacjencie z bazy`r`n")
+        $TextBox2.AppendText("`r`n")
+        $TextBox2.AppendText("Możesz zawęzić dodając do nazwiska imię. Np. Barański Michał`r`n")
+        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`r`n")
         ## by SID
         $connection = New-Object Oracle.ManagedDataAccess.Client.OracleConnection("Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=$ora_server)(PORT=1521)) (CONNECT_DATA=(SID=$ora_sid)));User Id=$ora_user;Password=$ora_pass;")
         
@@ -376,13 +418,13 @@ $Button25.Add_Click({
         $spr = $table 
         $sprfin = $spr | Select-Object * | Out-GridView -PassThru -Title "Przygotował Michał Zbyl"
 
-        $TextBox2.AppendText("`n")
-        $TextBox2.AppendText("$sprfin`n")
+        $TextBox2.AppendText("`r`n")
+        $TextBox2.AppendText("$sprfin`r`n")
     } else {
-        $TextBox2.AppendText("Informacje o Pacjencie z bazy`n")
-        $TextBox2.AppendText("`n")
-        $TextBox2.AppendText("Pole puste`n")
-        $TextBox2.AppendText("Możesz zawęzić dodając do nazwiska imię. Np. Barański Michał`n")
+        $TextBox2.AppendText("Informacje o Pacjencie z bazy`r`n")
+        $TextBox2.AppendText("`r`n")
+        $TextBox2.AppendText("Pole puste`r`n")
+        $TextBox2.AppendText("Możesz zawęzić dodając do nazwiska imię. Np. Barański Michał`r`n")
     }
 })
 # Pacjent - Log
@@ -390,9 +432,9 @@ $Button26.Add_Click({
     $nazwal = $TextBox1.Text
 
     if ($nazwal) {
-        $TextBox2.AppendText("Informacje o Użytkowniku`n")
-        $TextBox2.AppendText("`n")
-        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`n")
+        $TextBox2.AppendText("Informacje o Użytkowniku`r`n")
+        $TextBox2.AppendText("`r`n")
+        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`r`n")
         ## by SID
         $connection = New-Object Oracle.ManagedDataAccess.Client.OracleConnection("Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=$ora_server)(PORT=1521)) (CONNECT_DATA=(SID=$ora_sid)));User Id=$ora_user;Password=$ora_pass;")
         
@@ -412,22 +454,22 @@ $Button26.Add_Click({
         $spr = $table 
         $sprfin = $spr | Out-GridView -PassThru -Title "Przygotował Michał Zbyl"
 
-        $TextBox2.AppendText("`n")
-        $TextBox2.AppendText("$sprfin`n")
+        $TextBox2.AppendText("`r`n")
+        $TextBox2.AppendText("$sprfin`r`n")
     } else {
-        $TextBox2.AppendText("Informacje o Użytkowniku`n")
-        $TextBox2.AppendText("`n")
-        $TextBox2.AppendText("Pole puste`n")
+        $TextBox2.AppendText("Informacje o Użytkowniku`r`n")
+        $TextBox2.AppendText("`r`n")
+        $TextBox2.AppendText("Pole puste`r`n")
     }
 })
 # AD - Użytkownicy Raport
 $Button19.Add_Click({
-    $TextBox2.AppendText("Zawsze Aktualne`n")
-    $TextBox2.AppendText("Czekamy Cierpliwie aż się pokaże...`n")
+    $TextBox2.AppendText("Zawsze Aktualne`r`n")
+    $TextBox2.AppendText("Czekamy Cierpliwie aż się pokaże...`r`n")
     
     $first = Get-ADUser -Filter "Enabled -eq 'True' -AND SamAccountName -like 'p*'" -Properties lastLogon,SamAccountName,Department,PasswordLastSet,PasswordNeverExpires,PasswordExpired,EmailAddress | Select-Object Name,SamAccountName,Department,EmailAddress,pass*,@{Name="PasswordAge"; Expression={(Get-Date)-$_.PasswordLastSet}}, @{Name="LastLogon"; Expression={[DateTime]::FromFileTime($_.LastLogon)}} | Sort-Object Name
     $first | Out-GridView -Title "Przygotował Michał Zbyl"
-    $TextBox2.AppendText("`n")
+    $TextBox2.AppendText("`r`n")
 })
 # ping
 $Button20.Add_Click({
@@ -436,30 +478,30 @@ $Button20.Add_Click({
     if ($ping) {
         foreach ($name in $names){
             if (Test-Connection -ComputerName $name -Count 1 -ErrorAction SilentlyContinue){
-                $TextBox2.AppendText("$name,Ping OK`n")
+                $TextBox2.AppendText("$name,Ping OK`r`n")
             }
             else{
                 Write-Host "$name,down"
-                $TextBox2.AppendText("$name,Ping notOK`n")
+                $TextBox2.AppendText("$name,Ping notOK`r`n")
             }
         }
 
         If (Test-Connection $ping -count 1 -quiet) {
-                $TextBox2.AppendText("Ping OK`n")
+                $TextBox2.AppendText("Ping OK`r`n")
         } else {
-                $TextBox2.AppendText("Brak łączności`n")
+                $TextBox2.AppendText("Brak łączności`r`n")
         }
     } else {
-        $TextBox2.AppendText("Pole puste`n")
+        $TextBox2.AppendText("Pole puste`r`n")
     }
 })
 # Ostatni PC
 $Button16.Add_Click({
-    $TextBox2.AppendText("Czekaj cierpliwie...`n")
+    $TextBox2.AppendText("Czekaj cierpliwie...`r`n")
     $komp = (Get-ADComputer -Filter {Name -Like "K0*"} -Property * | Select-Object -Last 1)
     $kompLast = $komp | Select-Object -ExpandProperty Name
-    $TextBox2.AppendText("`n")
-    $TextBox2.AppendText("Ostatni PC w Domenie to: $kompLast`n")
+    $TextBox2.AppendText("`r`n")
+    $TextBox2.AppendText("Ostatni PC w Domenie to: $kompLast`r`n")
 })
 # Certyfikat
 $Button6.Add_Click({ 
@@ -478,7 +520,7 @@ $Button6.Add_Click({
         $command3.CommandText=$querycheck
         $wynik = $command3.ExecuteReader()
 
-        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`n")
+        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`r`n")
 
         if ($wynik.HasRows) {
             $query = 'alter user '+$first+' identified by "Szpital.1" account unlock'
@@ -534,7 +576,7 @@ $Button6.Add_Click({
             
             $pkiuser = $tablepki | Select-Object -ExpandProperty PRAC_PRACOWNIK_ID
             
-            $TextBox2.AppendText("ID użytkownika: $pkiuser`n")
+            $TextBox2.AppendText("ID użytkownika: $pkiuser`r`n")
             
             $querycheck = "Select * FROM SZ_PRAC_CONFIG where PC_PRAC_PRACOWNIK_ID LIKE '$pkiuser'"
             
@@ -550,7 +592,7 @@ $Button6.Add_Click({
             $connection.close()
             
             If ($tablepkiexist.HasRows) {
-                $TextBox2.AppendText("Użytkownik posiadał ustawiania logowania kartą w Esku.`n")
+                $TextBox2.AppendText("Użytkownik posiadał ustawiania logowania kartą w Esku.`r`n")
             } else {
                 $queryapkidodaj = "INSERT INTO SZ_PRAC_CONFIG
                 (PC_LOW_VALUE, PC_DOMAIN, PC_MEANING, PC_PRAC_PRACOWNIK_ID, PC_INS_USER, PC_JO_JEDNOSTKA_ID, PC_CZY_AKTUALNE, PC_ID)
@@ -579,7 +621,7 @@ $Button6.Add_Click({
         
                 $connection.close()
         
-                $TextBox2.AppendText("Dodana możliwość logowania kartą do Eskulapa`n")
+                $TextBox2.AppendText("Dodana możliwość logowania kartą do Eskulapa`r`n")
             }
 
             $hasko_Esku = "Certyfikat usunięty. Hasło Eskulapa dla $first zostało zmienione na Szpital.1"
@@ -588,9 +630,9 @@ $Button6.Add_Click({
         } 
 
         $TextBox2.AppendText("$hasko_Esku")
-        $TextBox2.AppendText("`n")
+        $TextBox2.AppendText("`r`n")
     } else {
-        $TextBox2.AppendText("Login pusty`n")
+        $TextBox2.AppendText("Login pusty`r`n")
     }
  })
 # Cer-Usuń
@@ -609,7 +651,7 @@ $Button13.Add_Click({
         $command3.CommandText=$querycheck
         $wynik = $command3.ExecuteReader()
 
-        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`n")
+        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`r`n")
 
         if ($wynik.HasRows) {
             $remad = 'CN='+$first+'_Esk,CN=eskulapConfiguration,DC=SZPITAL,DC=LOCAL'
@@ -655,7 +697,7 @@ $Button13.Add_Click({
             
             $pkiuser = $tablepki | Select-Object -ExpandProperty PRAC_PRACOWNIK_ID
             
-            $TextBox2.AppendText("ID użytkownika: $pkiuser`n")
+            $TextBox2.AppendText("ID użytkownika: $pkiuser`r`n")
             
             $querycheck = "Select * FROM SZ_PRAC_CONFIG where PC_PRAC_PRACOWNIK_ID LIKE '$pkiuser'"
             
@@ -697,9 +739,9 @@ $Button13.Add_Click({
         } 
 
         $TextBox2.AppendText("$hasko_Esku")
-        $TextBox2.AppendText("`n")
+        $TextBox2.AppendText("`r`n")
     } else {
-        $TextBox2.AppendText("Login pusty`n")
+        $TextBox2.AppendText("Login pusty`r`n")
     }
  })
 # Konsultacje
@@ -708,7 +750,7 @@ $TextBox4.Text = $il
 $Button7.Add_Click({ 
     $il = $TextBox4.Text
     $TextBox4.Text = $il
-    $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`n")
+    $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`r`n")
     
     ## by SID
     $connection = New-Object Oracle.ManagedDataAccess.Client.OracleConnection("Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=$ora_server)(PORT=1521)) (CONNECT_DATA=(SID=$ora_sid)));User Id=$ora_user;Password=$ora_pass;")
@@ -728,12 +770,12 @@ $Button7.Add_Click({
     $spr = $table | Select-Object KON_KONSULTACJA_ID, KON_DATA, KON_TEKST, KON_TYTUL
     $sprWynik = $spr | Out-GridView -PassThru -Title "Przygotował Michał Zbyl" | select-Object -ExpandProperty 'KON_KONSULTACJA_ID'
 
-    $TextBox2.AppendText("Otworzy się Grid z ostatnimi konsultacjami bez parametru B`n")
-    $TextBox2.AppendText("OSTATNIE NA DOLE !!! Można sortować`n")
+    $TextBox2.AppendText("Otworzy się Grid z ostatnimi konsultacjami bez parametru B`r`n")
+    $TextBox2.AppendText("OSTATNIE NA DOLE !!! Można sortować`r`n")
 
     if ($sprWynik) {
 
-        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`n")
+        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`r`n")
         ## To connect by SID
         $query2 = "update OD_KONSULTACJE set KON_STATUS = 'B', KON_UPD_USER = '', KON_UPD_DATE = '' where KON_KONSULTACJA_ID = $sprWynik"
         $connection.open()
@@ -744,9 +786,9 @@ $Button7.Add_Click({
 
         $connection.close()
 
-        $TextBox2.AppendText("`n")
-        $TextBox2.AppendText("Konsultacja o ID $sprWynik została odblokowana`n")
-        $TextBox2.AppendText("`n")
+        $TextBox2.AppendText("`r`n")
+        $TextBox2.AppendText("Konsultacja o ID $sprWynik została odblokowana`r`n")
+        $TextBox2.AppendText("`r`n")
     }
 
  })
@@ -766,7 +808,7 @@ $Button1.Add_Click({
         $command3.CommandText=$querycheck
         $wynik = $command3.ExecuteReader()
 
-        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`n")
+        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`r`n")
 
         if ($wynik.HasRows) {
             $query = 'alter user '+$first+' identified by "Szpital.1" account unlock'
@@ -787,9 +829,9 @@ $Button1.Add_Click({
         $connection.close() 
 
         $TextBox2.AppendText("$hasko_Esku")
-        $TextBox2.AppendText("`n")
+        $TextBox2.AppendText("`r`n")
     } else {
-        $TextBox2.AppendText("Login pusty`n")
+        $TextBox2.AppendText("Login pusty`r`n")
     }
  })
 $Button2.Add_Click({ 
@@ -797,13 +839,13 @@ $Button2.Add_Click({
 })
 # Status Pacjenta po nazwisku
 $Button15.Add_Click({ 
-    $TextBox2.AppendText("Piszemy Polskie znaki. Wielkość liter nie ma znaczenia.`n")
+    $TextBox2.AppendText("Piszemy Polskie znaki. Wielkość liter nie ma znaczenia.`r`n")
 
     $uesku = $TextBox1.Text
     $ueskuf = $uesku.substring(0,1).toupper()+$uesku.substring(1).tolower()
 
     if ($uesku) {
-        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`n")
+        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`r`n")
         
         ## by SID
         $connection = New-Object Oracle.ManagedDataAccess.Client.OracleConnection("Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=$ora_server)(PORT=1521)) (CONNECT_DATA=(SID=$ora_sid)));User Id=$ora_user;Password=$ora_pass;")
@@ -826,22 +868,22 @@ $Button15.Add_Click({
             $sprll = $spr | Select-Object -Property @{N='ID Pacjenta';E={$_."P_PACJENT_ID"}}, @{N='ID Szpital';E={$_."ps_pobyt_id"}}, @{N='ID Oddział';E={$_."po_pobyt_id"}}, @{N='Data Przyjęcia';E={$_."ps_data_przyjecia"}}, @{N='Imie';E={$_."P_IMIE"}}, @{N='Nazwisko';E={$_."P_NAZWISKO"}}, @{N='Pesel';E={$_."P_NR_PESEL"}}, @{N='Status';E={$_."P_STATUS"}}, @{N='Gdzie';E={$_."CASEWHENP_STATUS='A'THEN'WDOMU'WHENP_STATUS='O'THEN'NAODDZIALE'WHENP_STATUS='I'THEN'WIZBIEPRZYJEC'WHENP_STATUS='P'THEN'WPORADNI'WHENP_STATUS='Z'THEN'ZGON'ELSE'NOWY'END"}}, @{N='Oddział';E={$_."jo_nazwa"}} | Out-GridView -PassThru -Title "Przygotował Michał Zbyl"
             
             $sprel = $sprll
-            $TextBox2.AppendText("`n")
-            $TextBox2.AppendText("ID: $sprel`n")
+            $TextBox2.AppendText("`r`n")
+            $TextBox2.AppendText("ID: $sprel`r`n")
         }
     } else {
-        $TextBox2.AppendText("Pole puste`n")
+        $TextBox2.AppendText("Pole puste`r`n")
     }
 })
 # MAC/IP
 $Button21.Add_Click({ 
     $adreip = $TextBox3.Text
     if ($adreip) {
-        $TextBox2.AppendText("To trochę potrwa... Cierpliwości...`n")
+        $TextBox2.AppendText("To trochę potrwa... Cierpliwości...`r`n")
         if (Get-Module -ListAvailable -Name Posh-SSH) {
-            $TextBox2.AppendText("Potrzebne moduły obecne`n")
+            $TextBox2.AppendText("Potrzebne moduły obecne`r`n")
         } else {
-            $TextBox2.AppendText("Brak moddułów...Instalacja...`n")
+            $TextBox2.AppendText("Brak moddułów...Instalacja...`r`n")
             Find-Module Posh-SSH | Install-Module -Confirm:$False -Force
         }
         Import-Module Posh-SSH
@@ -855,9 +897,11 @@ $Button21.Add_Click({
         $FF = $F -split "(?<=;)\s" | Select-Object -First 1
         $FFF = $FF -replace '[;]',''
 
-        $TextBox2.AppendText("`n")
-        $TextBox2.AppendText("MAC Terminala: $FFF")
-        $TextBox2.AppendText("`n")
+        $TextBox2.AppendText("`r`n")
+        $TextBox2.AppendText("MAC Terminala: $FFF.ini")
+        $TextBox2.AppendText("`r`n")
+        $TextBox2.AppendText("Lokalizacja: /var/ftp/wyse/wnos/inc/$FFF.ini")
+        $TextBox2.AppendText("`r`n")
         
         Get-SCPFile -RemoteFile "/var/ftp/wyse/wnos/inc/$FFF.ini" -LocalFile "C:\WINDOWS\TEMP\$FFF.ini" -ComputerName 192.168.100.2 -Credential (New-Object -TypeName System.Management.Automation.PSCredential -ArgumentList $l, (ConvertTo-SecureString -String $p -AsPlainText -Force)) -AcceptKey -Force
 
@@ -873,28 +917,28 @@ $Button21.Add_Click({
             }
         }) -join "`r`n"
 
-        $TextBox2.AppendText("`n")
-        $TextBox2.AppendText("Adresy IP Drukarek:`n")
-        $TextBox2.AppendText("$sel`n")
+        $TextBox2.AppendText("`r`n")
+        $TextBox2.AppendText("Adresy IP Drukarek:`r`n")
+        $TextBox2.AppendText("$sel`r`n")
 
         Remove-SSHSession -Index 0 -Verbose
         Remove-Item C:\Windows\temp\$FFF.ini -Force
         Remove-Item C:\Windows\temp\dhcpd.csv -Force
     } else {
-        $TextBox2.AppendText("Brak Szukanego IP/Mac`n")
+        $TextBox2.AppendText("Brak Szukanego IP/Mac`r`n")
     }
  })
 # Email
 $Button12.Add_Click({ 
     $ldapu = $TextBox3.Text
     if ($ldapu) {
-        $TextBox2.AppendText("Zostanie utworzony email dla użytkownika o podanym p00000`n")
-        $TextBox2.AppendText("`n")
-        $TextBox2.AppendText("To trochę potrwa... Cierpliwości...`n")
+        $TextBox2.AppendText("Zostanie utworzony email dla użytkownika o podanym p00000`r`n")
+        $TextBox2.AppendText("`r`n")
+        $TextBox2.AppendText("To trochę potrwa... Cierpliwości...`r`n")
         if (Get-Module -ListAvailable -Name Posh-SSH) {
-            $TextBox2.AppendText("Potrzebne moduły obecne`n")
+            $TextBox2.AppendText("Potrzebne moduły obecne`r`n")
         } else {
-            $TextBox2.AppendText("Brak moddułów...Instalacja...`n")
+            $TextBox2.AppendText("Brak moddułów...Instalacja...`r`n")
             Find-Module Posh-SSH | Install-Module -Confirm:$False -Force
         }
         Import-Module Posh-SSH
@@ -944,28 +988,28 @@ $Button12.Add_Click({
         #$stream.WriteLine("whoami")
         $stream.WriteLine($ldapra)
         $TextBox2.AppendText("$ldapra")
-        $TextBox2.AppendText("`n")
+        $TextBox2.AppendText("`r`n")
         Start-Sleep -s 2
         $stream.WriteLine($ldapmaic)
         $TextBox2.AppendText("$ldapmaic")
-        $TextBox2.AppendText("`n")
+        $TextBox2.AppendText("`r`n")
         Start-Sleep -s 4
         $stream.WriteLine($ldapma)
         $TextBox2.AppendText("$ldapma")
-        $TextBox2.AppendText("`n")
+        $TextBox2.AppendText("`r`n")
         Start-Sleep -s 2
         $stream.WriteLine($ldapun)
         $TextBox2.AppendText("$ldapun")
-        $TextBox2.AppendText("`n")
+        $TextBox2.AppendText("`r`n")
         Start-Sleep -s 2
         $sReturn = $stream.Read()
         
         Remove-SSHSession -Index 0 -Verbose
-        $TextBox2.AppendText("Gotowe`n")
+        $TextBox2.AppendText("Gotowe`r`n")
     } else {
-        $TextBox2.AppendText("Zostanie utworzony email dla użytkownika o podanym p00000`n")
-        $TextBox2.AppendText("`n")
-        $TextBox2.AppendText("Pole puste`n")
+        $TextBox2.AppendText("Zostanie utworzony email dla użytkownika o podanym p00000`r`n")
+        $TextBox2.AppendText("`r`n")
+        $TextBox2.AppendText("Pole puste`r`n")
     }
  })
 # Adres IP
@@ -990,13 +1034,14 @@ $Button11.Add_Click({
 
         $lastDataRow = (Get-Content $loginlastfilefinal)[-1]
 
-        $TextBox2.AppendText("`n")
+        $TextBox2.AppendText("`r`n")
         $TextBox2.AppendText("$loginlast")
-        $TextBox2.AppendText("`n")
+        $TextBox2.AppendText("`r`n")
         $TextBox2.AppendText("$lastDataRow")
-        $TextBox2.AppendText("`n")
+        $TextBox2.AppendText("`r`n")
+        $ListBox.Items.Add("$loginlast")
     } else {
-        $TextBox2.AppendText("Login Pusty`n")
+        $TextBox2.AppendText("Login Pusty`r`n")
     }
 })
 # Połącz
@@ -1019,31 +1064,37 @@ $Button22.Add_Click({
     $ipl = $lastDataRow.split(' ')[0]
 
     if ($lastDataRow -like '*<========>*') {
+        $check_userAD = Get-ADUser -Identity $ippolacz | Select-Object -ExpandProperty SurName
+        $ListBox.Items.Add("$check_userAD - $ippolacz")
         $TextBox3.Text = $ipl
         $ippolacz = $TextBox3.Text
-        $TextBox2.AppendText("`n")
+        $TextBox2.AppendText("`r`n")
         $TextBox2.AppendText("$lastDataRow")
-        $TextBox2.AppendText("`n")
+        $ListBox.Items.Add("$ippolacz")
+        $TextBox2.AppendText("`r`n")
     } elseif ($lastDataRow -like '*Komputer:*') {
+        $check_userAD = Get-ADUser -Identity $ippolacz | Select-Object -ExpandProperty SurName
+        $ListBox.Items.Add("$check_userAD - $ippolacz")
         $iplf = $lastDataRow.split(':')[2]
         $iplff = $iplf.split(' ')[1]
         $TextBox3.Text = $iplff
         $ippolacz = $TextBox3.Text
-        $TextBox2.AppendText("`n")
+        $TextBox2.AppendText("`r`n")
         $TextBox2.AppendText("$lastDataRow")
-        $TextBox2.AppendText("`n")
+        $ListBox.Items.Add("$ippolacz")
+        $TextBox2.AppendText("`r`n")
     }
 
     if ($ippolacz) {
 
         Start-Process "C:\Program Files\RealVNC\VNC Viewer\vncviewer.exe" $ippolacz
 
-        $TextBox2.AppendText("`n")
-        $TextBox2.AppendText("Jeżeli zainstalowany jest C:\Program Files\RealVNC\VNC Viewer`n")
+        $TextBox2.AppendText("`r`n")
+        $TextBox2.AppendText("Jeżeli zainstalowany jest C:\Program Files\RealVNC\VNC Viewer`r`n")
         $TextBox2.AppendText("To otworzy się połączenie VNC z $ippolacz")
-        $TextBox2.AppendText("`n")
+        $TextBox2.AppendText("`r`n")
     } else {
-        $TextBox2.AppendText("Adres IP pusty`n")
+        $TextBox2.AppendText("Adres IP pusty`r`n")
     }
 })
 # Adres IP - Wszystkie
@@ -1054,48 +1105,49 @@ $Button14.Add_Click({
 
         Invoke-Item $loginpath
 
-        $TextBox2.AppendText("Explorer otworzony`n")
+        $TextBox2.AppendText("Explorer otworzony`r`n")
     } else {
-        $TextBox2.AppendText("Login Pusty`n")
+        $TextBox2.AppendText("Login Pusty`r`n")
     }
 })
 # Szukaj loginu po nazwisku - Domena
 $Button10.Add_Click({ 
-    $TextBox2.AppendText("Piszemy Polskie znaki. Wielkość liter nie ma znaczenia.`n")
+    $TextBox2.AppendText("Piszemy Polskie znaki. Wielkość liter nie ma znaczenia.`r`n")
 
     $domesku = $TextBox3.Text
     $domeskuf = $domesku.substring(0,1).toupper()+$domesku.substring(1).tolower()
 
     if ($domeskuf) {
-        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`n")
+        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`r`n")
 
         $spr = Get-ADUser -Filter "Surname -like '$domeskuf*'" | Select-Object 'Name','SamAccountName'
 
         if ($spr) {
             $spr3 = $spr | Out-GridView -PassThru -Title "Przygotował Michał Zbyl" | select-Object -ExpandProperty 'SamAccountName'
-            $TextBox2.AppendText("`n")
-            $TextBox2.AppendText("Wynik:`n")
+            $TextBox2.AppendText("`r`n")
+            $TextBox2.AppendText("Wynik:`r`n")
             $TextBox2.AppendText("$domesku")
-            $TextBox2.AppendText("`n")
+            $TextBox2.AppendText("`r`n")
             $TextBox2.AppendText("$spr3")
-            $TextBox2.AppendText("`n")
+            $TextBox2.AppendText("`r`n")
             $TextBox3.Text = $spr3
+            $ListBox.Items.Add("$domesku - $spr3")
         } else {
-            $TextBox2.AppendText("Brak wyników`n")
+            $TextBox2.AppendText("Brak wyników`r`n")
         }
     } else {
-        $TextBox2.AppendText("Pole puste`n")
+        $TextBox2.AppendText("Pole puste`r`n")
     }
  })
 # Szukaj loginu po nazwisku - Esku
 $Button9.Add_Click({ 
-    $TextBox2.AppendText("Piszemy Polskie znaki. Wielkość liter nie ma znaczenia.`n")
+    $TextBox2.AppendText("Piszemy Polskie znaki. Wielkość liter nie ma znaczenia.`r`n")
 
     $uesku = $TextBox1.Text
     $ueskuf = $uesku.substring(0,1).toupper()+$uesku.substring(1).tolower()
 
     if ($uesku) {
-        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`n")
+        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`r`n")
         
         ## by SID
         $connection = New-Object Oracle.ManagedDataAccess.Client.OracleConnection("Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=$ora_server)(PORT=1521)) (CONNECT_DATA=(SID=$ora_sid)));User Id=$ora_user;Password=$ora_pass;")
@@ -1117,22 +1169,22 @@ $Button9.Add_Click({
             $spr = $table | Select-Object PRAC_IMIE, PRAC_NAZWISKO, PRAC_USERNAME, PRAC_NR_PESEL, PRAC_PASS_CHANGE_DATE
             $spr3 = $spr | Out-GridView -PassThru -Title "Przygotował Michał Zbyl" | select-Object -ExpandProperty 'PRAC_USERNAME'
 
-            $TextBox2.AppendText("`n")
-            $TextBox2.AppendText("Wynik:`n")
+            $TextBox2.AppendText("`r`n")
+            $TextBox2.AppendText("Wynik:`r`n")
             $TextBox2.AppendText("$uesku")
-            $TextBox2.AppendText("`n")
+            $TextBox2.AppendText("`r`n")
             $TextBox2.AppendText("$spr3")
-            $TextBox2.AppendText("`n")
+            $TextBox2.AppendText("`r`n")
             $TextBox1.Text = $spr3
         }
     } else {
-        $TextBox2.AppendText("Pole puste`n")
+        $TextBox2.AppendText("Pole puste`r`n")
     }
  })
 # Blokada-Wypisy
 $Button8.Add_Click({ 
-    $TextBox2.AppendText("Lista użytkowników blokujących wypisy.`n")
-    $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`n")
+    $TextBox2.AppendText("Lista użytkowników blokujących wypisy.`r`n")
+    $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`r`n")
      
     ## by SID
     $connection = New-Object Oracle.ManagedDataAccess.Client.OracleConnection("Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=$ora_server)(PORT=1521)) (CONNECT_DATA=(SID=$ora_sid)));User Id=$ora_user;Password=$ora_pass;")
@@ -1171,7 +1223,7 @@ $Button5.Add_Click({
         $command3.CommandText=$querycheck
         $wynik = $command3.ExecuteReader()
 
-        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`n")
+        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`r`n")
 
         if ($wynik.HasRows) {
             $query = 'alter user '+$first+' account unlock'
@@ -1188,9 +1240,9 @@ $Button5.Add_Click({
         $connection.close()
 
         $TextBox2.AppendText("$hasko_Esku")
-        $TextBox2.AppendText("`n")
+        $TextBox2.AppendText("`r`n")
     } else {
-        $TextBox2.AppendText("Login pusty`n")
+        $TextBox2.AppendText("Login pusty`r`n")
     }
  })
 # Szukaj Nazwiska po p0
@@ -1199,13 +1251,13 @@ $Button23.Add_Click({
     if ($dom_loginu) {
         $check_userAD = Get-ADUser -Identity $dom_loginu | Select-Object -ExpandProperty Name
         if ($check_userAD) {
-            $TextBox2.AppendText("$dom_loginu - $check_userAD`n")
+            $TextBox2.AppendText("$dom_loginu - $check_userAD`r`n")
         } else {
             $TextBox2.AppendText("Brak takiego loginu $check_userAD")
-            $TextBox2.AppendText("`n")
+            $TextBox2.AppendText("`r`n")
         }
     } else {
-        $TextBox2.AppendText("Login pusty`n")
+        $TextBox2.AppendText("Login pusty`r`n")
     }
 })
 # Odblokuj - Domena
@@ -1215,13 +1267,13 @@ $Button4.Add_Click({
             $check_userAD = Get-ADUser -Identity $dom_loginu | Select-Object -ExpandProperty Name
             if ($check_userAD) {
                 Unlock-ADAccount $dom_loginu
-                $TextBox2.AppendText("$dom_loginu ($check_userAD) został odblokowany`n")
+                $TextBox2.AppendText("$dom_loginu ($check_userAD) został odblokowany`r`n")
             } else {
                 $TextBox2.AppendText("Brak takiego loginu $dom_loginu")
-                $TextBox2.AppendText("`n")
+                $TextBox2.AppendText("`r`n")
             }
     } else {
-        $TextBox2.AppendText("Login pusty`n")
+        $TextBox2.AppendText("Login pusty`r`n")
     }
  })
 # Hasło - Domena
@@ -1237,22 +1289,22 @@ $Button3.Add_Click({
                     Set-ADAccountPassword $dom_login -Reset -NewPassword (ConvertTo-SecureString -AsPlainText "Szpital.1" -Force -Verbose) -PassThru
                     Unlock-ADAccount $dom_login
                     Set-ADUser -Identity $dom_login -ChangePasswordAtLogon $true
-                    $TextBox2.AppendText("Hasło domenowe dla $dom_login ($check_userAD) zostało zmienione na Szpital.1`n")
+                    $TextBox2.AppendText("Hasło domenowe dla $dom_login ($check_userAD) zostało zmienione na Szpital.1`r`n")
                 } else {
-                    $TextBox2.AppendText("Musi być 6 znaków 'p00000'`n")
+                    $TextBox2.AppendText("Musi być 6 znaków 'p00000'`r`n")
                 }
             } else {
-                $TextBox2.AppendText("Po 'p' muszą być same cyfry`n")
+                $TextBox2.AppendText("Po 'p' muszą być same cyfry`r`n")
             } 
         } else {
-            $TextBox2.AppendText("Musi zaczynać sie 'p' (Może być duże)`n")
+            $TextBox2.AppendText("Musi zaczynać sie 'p' (Może być duże)`r`n")
         }
     } else {
-        $TextBox2.AppendText("Domenowe hasło bez zmian`n")
+        $TextBox2.AppendText("Domenowe hasło bez zmian`r`n")
     }
  })
 } Else {
-    $TextBox2.AppendText("$user Nie jest IT`n")
+    $TextBox2.AppendText("$user Nie jest IT`r`n")
 }
 
 [void]$Form.ShowDialog()
