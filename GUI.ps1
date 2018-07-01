@@ -8,7 +8,7 @@ Add-Type -AssemblyName System.Windows.Forms
 
 $Form                            = New-Object system.Windows.Forms.Form
 $Form.ClientSize                 = '731,445'
-$Form.text                       = "Przygotował Michał Zbyl. Ver. 2.2.5"
+$Form.text                       = "Przygotował Michał Zbyl. Ver. 2.3.2"
 $form.StartPosition              = "centerscreen"
 $Form.TopMost                    = $false
 
@@ -95,6 +95,13 @@ $Button25.width                   = 80
 $Button25.height                  = 30
 $Button25.location                = New-Object System.Drawing.Point(286,68)
 $Button25.Font                    = 'Microsoft Sans Serif,8'
+
+$Button28                         = New-Object system.Windows.Forms.Button
+$Button28.text                    = "ID Operacji"
+$Button28.width                   = 80
+$Button28.height                  = 30
+$Button28.location                = New-Object System.Drawing.Point(366,68)
+$Button28.Font                    = 'Microsoft Sans Serif,8'
 
 $Button24                         = New-Object system.Windows.Forms.Button
 $Button24.text                    = "Ponowne skierowanie"
@@ -258,7 +265,7 @@ $ListBox.width                    = 210
 $ListBox.height                   = 180
 $ListBox.location                 = New-Object System.Drawing.Point(480,80)
 
-$Form.controls.AddRange(@($Button1,$ListBox,$Label3,$TextBox1,$Button25,$Button27,$Button24,$Button26,$TextBox4,$Button16,$Button23,$Button22,$Button21,$Button19,$Button20,$Button18,$TextBox2,$Label1,$Button2,$Button15,$Button3,$Button13,$Button14,$Label2,$TextBox3,$Button4,$Button5,$Button6,$Button7,$Button12,$Button8,$Button9,$Button10,$Button11))
+$Form.controls.AddRange(@($Button1,$ListBox,$Label3,$TextBox1,$Button25,$Button28,$Button27,$Button24,$Button26,$TextBox4,$Button16,$Button23,$Button22,$Button21,$Button19,$Button20,$Button18,$TextBox2,$Label1,$Button2,$Button15,$Button3,$Button13,$Button14,$Label2,$TextBox3,$Button4,$Button5,$Button6,$Button7,$Button12,$Button8,$Button9,$Button10,$Button11))
 
 $userr = $env:UserName
 $p1 = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(""))
@@ -276,13 +283,13 @@ if (($userr -eq $p1) -or ($userr -eq $p2) -or ($userr -eq $p3) -or ($userr -eq $
 }
 
 If (($members -contains $userr) -or ($zuo1 -eq "zuo")) {
-    $l = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(""))
-    $p = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(""))
+    $l = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("="))
+    $p = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("=="))
     ## To connect by SID
     $ora_server = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(""))
-    $ora_user = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(""))
-    $ora_pass = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(""))
-    $ora_sid = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String(""))
+    $ora_user = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("="))
+    $ora_pass = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("=="))
+    $ora_sid = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("=="))
 
 
 #ListBox
@@ -311,6 +318,66 @@ $Button27.Add_Click({
     $check_userAD = Get-ADUser -Identity $SID | Select-Object -ExpandProperty Name
     $TextBox2.AppendText("$check_userAD - $SID`r`n")
     $TextBox2.AppendText("$SIDF`r`n")
+})
+
+# ID Operacji
+$Button28.Add_Click({
+    $nazwai = $TextBox1.Text
+
+    if ($nazwai) {
+        $TextBox2.AppendText("Informacje o ID Operacji na podstawie ID Pacjenta`r`n")
+        $TextBox2.AppendText("`r`n")
+        $TextBox2.AppendText("Możesz zawęzić dodając do nazwiska imię. Np. Barański Michał`r`n")
+        $TextBox2.AppendText("Trwa sprawdzanie. Czekaj...`r`n")
+        ## by SID
+        $connection = New-Object Oracle.ManagedDataAccess.Client.OracleConnection("Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=$ora_server)(PORT=1521)) (CONNECT_DATA=(SID=$ora_sid)));User Id=$ora_user;Password=$ora_pass;")
+        
+        $query = "select * from ri_pacjenci where upper(p_nazwisko||' '||p_imie) like upper('%'||'$nazwai'||'%')"
+        
+        $connection.open()
+        
+        $command=$connection.CreateCommand()
+        $command.CommandText=$query
+        $wynik = $command.ExecuteReader()
+        
+        $table = new-object System.Data.DataTable
+        $table.Load($wynik)
+        
+        $connection.close()
+            
+        $spr = $table 
+        $sprfin = $spr | Out-GridView -PassThru -Title "Przygotował Michał Zbyl" | select-Object -ExpandProperty 'P_PACJENT_ID'
+
+        $TextBox2.AppendText("`r`n")
+        $TextBox2.AppendText("ID Pacjenta: $sprfin`r`n")
+
+        if ($sprfin) {
+            $connection = New-Object Oracle.ManagedDataAccess.Client.OracleConnection("Data Source=(DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=$ora_server)(PORT=1521)) (CONNECT_DATA=(SID=$ora_sid)));User Id=$ora_user;Password=$ora_pass;")
+        
+            $query = "select * from od_lecz_pacjenta where lec_p_pacjent_id = '$sprfin'"
+            
+            $connection.open()
+            
+            $command=$connection.CreateCommand()
+            $command.CommandText=$query
+            $wynik = $command.ExecuteReader()
+            
+            $table = new-object System.Data.DataTable
+            $table.Load($wynik)
+            
+            $connection.close()
+                
+            $spr = $table 
+            $sprfinf = $spr | Out-GridView -PassThru -Title "Przygotował Michał Zbyl" | select-Object -ExpandProperty 'LEC_LECZENIE_ID'
+
+            $TextBox2.AppendText("ID Operacji: $sprfinf`r`n")
+        }
+    } else {
+        $TextBox2.AppendText("Informacje o Pacjencie z bazy`r`n")
+        $TextBox2.AppendText("`r`n")
+        $TextBox2.AppendText("Pole puste`r`n")
+        $TextBox2.AppendText("Możesz zawęzić dodając do nazwiska imię. Np. Barański Michał`r`n")
+    }
 })
 
 # AD - PC Raport
@@ -1039,7 +1106,12 @@ $Button11.Add_Click({
         $TextBox2.AppendText("`r`n")
         $TextBox2.AppendText("$lastDataRow")
         $TextBox2.AppendText("`r`n")
-        $ListBox.Items.Add("$loginlast")
+        $check_userAD = Get-ADUser -Identity $loginlast | Select-Object -ExpandProperty SurName
+        if ($check_userAD) {
+            $ListBox.Items.Add("$check_userAD - $loginlast")
+        } else {
+            $ListBox.Items.Add("$loginlast")
+        }
     } else {
         $TextBox2.AppendText("Login Pusty`r`n")
     }
@@ -1048,6 +1120,7 @@ $Button11.Add_Click({
 $Button22.Add_Click({ 
     #Start-Process "\\fs01\IT\Raporty\Logon\OstatniRaz.vbs"
     $ippolacz = $TextBox3.Text
+    $ipf = $TextBox3.Text
 
     $loginpath = "\\fs01\IT\Raporty\Logon\$ippolacz"
 
@@ -1064,8 +1137,6 @@ $Button22.Add_Click({
     $ipl = $lastDataRow.split(' ')[0]
 
     if ($lastDataRow -like '*<========>*') {
-        $check_userAD = Get-ADUser -Identity $ippolacz | Select-Object -ExpandProperty SurName
-        $ListBox.Items.Add("$check_userAD - $ippolacz")
         $TextBox3.Text = $ipl
         $ippolacz = $TextBox3.Text
         $TextBox2.AppendText("`r`n")
@@ -1073,8 +1144,6 @@ $Button22.Add_Click({
         $ListBox.Items.Add("$ippolacz")
         $TextBox2.AppendText("`r`n")
     } elseif ($lastDataRow -like '*Komputer:*') {
-        $check_userAD = Get-ADUser -Identity $ippolacz | Select-Object -ExpandProperty SurName
-        $ListBox.Items.Add("$check_userAD - $ippolacz")
         $iplf = $lastDataRow.split(':')[2]
         $iplff = $iplf.split(' ')[1]
         $TextBox3.Text = $iplff
@@ -1086,6 +1155,9 @@ $Button22.Add_Click({
     }
 
     if ($ippolacz) {
+        if ($ippolacz -notlike '192.168*') {
+            $ippolacz = '192.168.'+$ippolacz
+        }
 
         Start-Process "C:\Program Files\RealVNC\VNC Viewer\vncviewer.exe" $ippolacz
 
@@ -1093,6 +1165,12 @@ $Button22.Add_Click({
         $TextBox2.AppendText("Jeżeli zainstalowany jest C:\Program Files\RealVNC\VNC Viewer`r`n")
         $TextBox2.AppendText("To otworzy się połączenie VNC z $ippolacz")
         $TextBox2.AppendText("`r`n")
+        $check_userAD = Get-ADUser -Identity $ipf | Select-Object -ExpandProperty SurName
+        if ($check_userAD) {
+            $ListBox.Items.Add("$check_userAD - $ippolacz")
+        } else {
+            $ListBox.Items.Add("$ippolacz")
+        }
     } else {
         $TextBox2.AppendText("Adres IP pusty`r`n")
     }
