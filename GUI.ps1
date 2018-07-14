@@ -8,7 +8,7 @@ Add-Type -AssemblyName System.Windows.Forms
 
 $Form                            = New-Object system.Windows.Forms.Form
 $Form.ClientSize                 = '731,445'
-$Form.text                       = "Przygotował Michał Zbyl. Ver. 2.3.2"
+$Form.text                       = "Przygotował Michał Zbyl. Ver. 2.4.2"
 $form.StartPosition              = "centerscreen"
 $Form.TopMost                    = $false
 
@@ -745,10 +745,6 @@ $Button13.Add_Click({
             
             $pkiid = $table | Select-Object -ExpandProperty PC_ID
             
-            #Write-Output $pkiid
-            $pkiidjeden = ($pkiid+1)
-            #Write-Output $pkiidjeden
-            
             $querycheck = "Select * FROM RI_PRACOWNICY where PRAC_USERNAME LIKE '$first'"
             
             $connection.open()
@@ -1116,6 +1112,12 @@ $Button11.Add_Click({
         $TextBox2.AppendText("Login Pusty`r`n")
     }
 })
+$Form.KeyPreview = $True
+$Form.Add_KeyDown({if ($_.KeyCode -eq "Enter") 
+    {
+	    $Button22.PerformClick()
+	}
+})
 # Połącz
 $Button22.Add_Click({ 
     #Start-Process "\\fs01\IT\Raporty\Logon\OstatniRaz.vbs"
@@ -1135,13 +1137,14 @@ $Button22.Add_Click({
     $lastDataRow = (Get-Content $loginlastfilefinal)[-1]
     
     $ipl = $lastDataRow.split(' ')[0]
+    $check_userAD = Get-ADUser -Identity $ipf | Select-Object -ExpandProperty SurName
 
     if ($lastDataRow -like '*<========>*') {
         $TextBox3.Text = $ipl
         $ippolacz = $TextBox3.Text
         $TextBox2.AppendText("`r`n")
         $TextBox2.AppendText("$lastDataRow")
-        $ListBox.Items.Add("$ippolacz")
+        $ListBox.Items.Add("$check_userAD - $ippolacz")
         $TextBox2.AppendText("`r`n")
     } elseif ($lastDataRow -like '*Komputer:*') {
         $iplf = $lastDataRow.split(':')[2]
@@ -1150,12 +1153,17 @@ $Button22.Add_Click({
         $ippolacz = $TextBox3.Text
         $TextBox2.AppendText("`r`n")
         $TextBox2.AppendText("$lastDataRow")
-        $ListBox.Items.Add("$ippolacz")
+        $ListBox.Items.Add("$check_userAD - $ippolacz")
         $TextBox2.AppendText("`r`n")
     }
 
     if ($ippolacz) {
-        if ($ippolacz -notlike '192.168*') {
+        $ippolacz2 = $ippolacz.toupper()
+        if ($ippolacz2 -like 'NEG*') {
+            $ippolacz = $ippolacz
+        } elseif ($ippolacz2 -like 'K*') {
+            $ippolacz = $ippolacz
+        } elseif ($ippolacz -notlike '192.168*') {
             $ippolacz = '192.168.'+$ippolacz
         }
 
@@ -1165,9 +1173,8 @@ $Button22.Add_Click({
         $TextBox2.AppendText("Jeżeli zainstalowany jest C:\Program Files\RealVNC\VNC Viewer`r`n")
         $TextBox2.AppendText("To otworzy się połączenie VNC z $ippolacz")
         $TextBox2.AppendText("`r`n")
-        $check_userAD = Get-ADUser -Identity $ipf | Select-Object -ExpandProperty SurName
         if ($check_userAD) {
-            $ListBox.Items.Add("$check_userAD - $ippolacz")
+            $ListBox.Items.Add("$check_userAD - $ipf")
         } else {
             $ListBox.Items.Add("$ippolacz")
         }
